@@ -1,0 +1,24 @@
+body {
+  overflow-x: hidden;
+  background-image: url("../assets/background-use-dark.jpeg");
+  background-size: 100%;
+  background-repeat: no-repeat; 
+}
+
+.light-grey {
+  background-color: #e0e0eb;
+}
+
+.icon {
+  width: 35px;
+  height: 35px;
+}
+
+.bg-trans {
+  background: rgba(255, 255, 255, 0.5);
+}
+
+.map {
+  height: 500px;
+  width: 100%;
+}
