@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import "../css/App.css";
 import data from "../data/train-data.json";
+import Train from "./train.tsx";
 import {
   APIProvider,
   Map,
@@ -10,59 +11,110 @@ import {
   InfoWindow,
 } from "@vis.gl/react-google-maps";
 
+type Train = {
+  rt: string;
+  rn: string;
+  lat: string;
+  lon: string;
+  heading: string;
+  destNm: string;
+  nextStaNm: string;
+  route: string;
+};
+
 function GoogleMap() {
   const position = { lat: 41.8781, lng: -87.6298 };
   const zoom = 10;
   const [trainLines, setTrainLines] = useState([
     {
       name: "Red Line",
+      lit_name: "red",
       color: "#c60c30",
       visible: false,
-      path: data.Red,
+      branches: data.Red,
     },
     {
       name: "Purple Line",
+      lit_name: "p",
       color: "#522398",
       visible: false,
-      path: data.P,
+      branches: data.P,
     },
     {
       name: "Yellow Line",
+      lit_name: "y",
       color: "#f9e300",
       visible: false,
-      path: data.Y,
+      branches: data.Y,
     },
     {
       name: "Blue Line",
+      lit_name: "blue",
       color: "#00a1de",
       visible: false,
-      path: data.Blue,
+      branches: data.Blue,
     },
     {
       name: "Pink Line",
+      lit_name: "pink",
       color: "#e27ea6",
       visible: false,
-      path: data.Pink,
+      branches: data.Pink,
     },
     {
       name: "Green Line",
+      lit_name: "g",
       color: "#009b3a",
       visible: false,
-      path: data.G,
+      branches: data.G,
     },
     {
       name: "Orange Line",
+      lit_name: "org",
       color: "#f9461c",
       visible: false,
-      path: data.Org,
+      branches: data.Org,
     },
     {
       name: "Brown Line",
+      lit_name: "brn",
       color: "#62361b",
       visible: false,
-      path: data.Brn,
+      branches: data.Brn,
     },
   ]);
+
+  const [trains, setTrains] = useState<Train[]>([]);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    const fetchTrains = async () => {
+      try {
+        const res = await fetch(`/api/cta-trains`);
+        const data = await res.json();
+
+        if (data.ctatt?.errCd !== "0") {
+          setError(data.ctatt?.errNm || "CTA API error");
+          return;
+        }
+
+        const routes = data.ctatt?.route ?? [];
+        const allTrains = routes.flatMap((route: any) =>
+          (route.train ?? []).map((train: any) => ({
+            ...train,
+            line: route["@name"],
+          })),
+        );
+
+        setTrains(allTrains);
+      } catch (err) {
+        setError("Failed to load train positions");
+      }
+    };
+    fetchTrains();
+    const id = setInterval(fetchTrains, 30000);
+    return () => clearInterval(id);
+  }, []);
 
   return (
     <>
@@ -90,22 +142,40 @@ function GoogleMap() {
       </div>
       <APIProvider
         apiKey={import.meta.env.VITE_NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}
+        libraries={["marker"]}
       >
         <div className="map">
           <Map
             defaultZoom={zoom}
             defaultCenter={position}
-            mapID={import.meta.env.VITE_MAP_ID}
+            mapId={import.meta.env.VITE_MAP_ID}
           >
             {trainLines.map(
               (val) =>
                 val.visible && (
-                  <Polyline
-                    path={val.path}
-                    strokeColor={val.color}
-                    strokeOpacity={1.0}
-                    strokeWeight={4}
-                  />
+                  <>
+                    {val.branches.map((branch) => (
+                      <Polyline
+                        path={branch}
+                        strokeColor={val.color}
+                        strokeOpacity={1.0}
+                        strokeWeight={4}
+                      />
+                    ))}
+                    {console.log(trains[0])}
+                    {trains.map(
+                      (train) =>
+                        train.line === val.lit_name && (
+                          <Train
+                            color={val.color}
+                            position={{
+                              lat: Number(train.lat),
+                              lng: Number(train.lon),
+                            }}
+                          />
+                        ),
+                    )}
+                  </>
                 ),
             )}
           </Map>

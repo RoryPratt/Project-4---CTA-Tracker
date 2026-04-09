@@ -6,10 +6,10 @@ export default defineConfig({
   server: {
     proxy: {
       "/api/cta-trains": {
-        target: "http://lapi.transitchicago.com",
+        target: "https://lapi.transitchicago.com",
         changeOrigin: true,
         rewrite: () =>
-          `/api/1.0/ttpositions.aspx?key=${process.env.VITE_CTA_API_KEY}`,
+          "/api/1.0/ttpositions.aspx?key=619e116f4e3d459d8794dfeb1d0ada68&rt=red,blue,brn,g,org,p,pink,y&outputType=JSON",
       },
     },
   },

@@ -7,18 +7,27 @@ shapes_raw = pd.read_csv("./google_transit/shapes.txt")
 
 def get_line(line):
     train_line_trips = trips_raw[trips_raw["route_id"] == line]
+
     train_line_shape_ids = train_line_trips["shape_id"].values.tolist()
 
     shapes_train_line = shapes_raw[shapes_raw["shape_id"].isin(train_line_shape_ids)]
 
-    lat = shapes_train_line["shape_pt_lat"].values.tolist()
-    lng = shapes_train_line["shape_pt_lon"].values.tolist()
+    raw_branches = [group.copy() for _, group in shapes_train_line.groupby("shape_id")]
 
-    points = []
+    branches = []
 
-    for lat, lng in zip(lat, lng): points.append({"lat": lat, "lng": lng})
+    for raw_branch in raw_branches:
 
-    return points
+        lat = raw_branch["shape_pt_lat"].values.tolist()
+        lng = raw_branch["shape_pt_lon"].values.tolist()
+
+        points = []
+
+        for lat, lng in zip(lat, lng): points.append({"lat": lat, "lng": lng})
+
+        branches.append(points)
+
+    return branches
 
 data = {
     "Red": get_line("Red"),
