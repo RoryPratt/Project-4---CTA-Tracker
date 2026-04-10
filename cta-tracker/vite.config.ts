@@ -4,6 +4,10 @@ import react from "@vitejs/plugin-react";
 export default defineConfig({
   plugins: [react()],
   server: {
+    host: "0.0.0.0",
+    port: 5173,
+    strictPort: true,
+    allowedHosts: ["project-4-cta-tracker.fly.dev"],
     proxy: {
       "/api/cta-trains": {
         target: "https://lapi.transitchicago.com",
